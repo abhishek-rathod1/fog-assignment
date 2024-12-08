@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rain Grid Animation</title>
+    <style>
+      body {
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        background: linear-gradient(135deg, #1d2b64, #f8cdda);
+        font-family: "Arial", sans-serif;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(15, 30px);
+        grid-template-rows: repeat(20, 30px);
+        gap: 2px;
+        position: relative;
+        background: rgba(0, 0, 0, 0.4);
+        padding: 10px;
+        border: 2px solid #fff;
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.5);
+      }
+
+      .cell {
+        width: 30px;
+        height: 30px;
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      .highlight {
+        background: rgba(22, 22, 22, 0.7) !important;
+        transition: background 0.3s ease;
+      }
+
+      .controls {
+        margin-top: 20px;
+        display: flex;
+        gap: 10px;
+      }
+
+      button {
+        padding: 10px 20px;
+        border: none;
+        background: #ff6f61;
+        color: white;
+        font-size: 16px;
+        cursor: pointer;
+        border-radius: 5px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      }
+
+      button:hover {
+        background: #ff4c40;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="grid" id="grid"></div>
+
+    <div class="controls">
+      <button onclick="startRain()">Start Rain</button>
+      <button onclick="stopRain()">Stop Rain</button>
+    </div>
+
+    <script>
+      const grid = document.getElementById("grid");
+      const cols = 15;
+      const rows = 20;
+      let rainInterval;
+      let activeStreams = [];
+
+      // Create the grid cells dynamically
+      for (let i = 0; i < cols * rows; i++) {
+        const cell = document.createElement("div");
+        cell.classList.add("cell");
+        grid.appendChild(cell);
+      }
+
+      function createRainStream() {
+        // Random starting position
+        let column = Math.floor(Math.random() * cols);
+
+        return {
+          positions: Array.from({ length: 6 }, (_, i) => i * cols + column), // 6 cells in a column
+          index: 0,
+          x: column,
+        };
+      }
+      function getRandomColor() {
+        const r = Math.floor(Math.random() * 256);
+        const g = Math.floor(Math.random() * 256);
+        const b = Math.floor(Math.random() * 256);
+        return `rgba(${r}, ${g}, ${b}, 0.7)`; // Random RGBA color
+      }
+      function animateRain() {
+        activeStreams = [];
+
+        // Stagger the creation of rain streams
+        for (let i = 0; i < 8; i++) {
+          setTimeout(() => {
+            activeStreams.push(createRainStream());
+          }, i * 100); // Staggered delay of 100ms between each stream's initialization
+        }
+
+        rainInterval = setInterval(() => {
+          const allCells = document.querySelectorAll(".cell");
+          allCells.forEach((cell) => cell.classList.remove("highlight"));
+
+          activeStreams.forEach((stream) => {
+            const randShift = Math.random() * 2 - 1; // Random horizontal movement
+            const nextX = stream.x + randShift; // Randomize horizontal movement between -1 and 1
+            stream.x = Math.max(0, Math.min(cols - 1, Math.round(nextX)));
+
+            stream.positions = stream.positions.map((pos) => pos + cols);
+
+            if (stream.positions[5] >= cols * rows) {
+              stream.x = Math.floor(Math.random() * cols);
+              stream.positions = Array.from(
+                { length: 6 },
+                (_, i) => i * cols + stream.x
+              );
+            }
+
+            stream.positions.forEach((index) => {
+              if (index >= 0 && index < cols * rows) {
+                allCells[index].classList.add("highlight");
+              }
+            });
+          });
+        }, 100);
+      }
+
+      function stopRain() {
+        clearInterval(rainInterval);
+        rainInterval = null;
+        const allCells = document.querySelectorAll(".cell");
+        allCells.forEach((cell) => cell.classList.remove("highlight"));
+      }
+
+      function startRain() {
+        if (rainInterval) return;
+        animateRain();
+      }
+    </script>
+  </body>
+</html>
